@@ -1,6 +1,8 @@
 # Roboflow n8n Auto Trainer
 Automates dataset syncing and YOLOv8 training using n8n and the Roboflow API.
 
+![N8N Automation Image](N8N Automation.png)
+
 ## Features
 
 - Scheduled check every 20 minutes
