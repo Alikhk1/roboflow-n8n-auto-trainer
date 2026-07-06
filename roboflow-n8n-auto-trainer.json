@@ -1,0 +1,259 @@
+{
+  "name": "Roboflow Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1136,
+        -144
+      ],
+      "id": "45d2b29e-c670-4678-9d41-a0bcb3c20cda",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d0a67e3-7ff5-4cde-8351-03c9d564290f",
+              "leftValue": "={{ +$json[\"project\"][\"updated\"] }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        -144
+      ],
+      "id": "f85989fd-73c2-4c93-a398-5a4f10196ba3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://api.roboflow.com/[WORK_SPACE]/[PROJECT_NAME]?api_key=[API_KEY]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        -144
+      ],
+      "id": "c0a84e51-aff3-436b-a8e2-34dcab90a207",
+      "name": "Roboflow API"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/data/ {{ $json.export.format }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -240
+      ],
+      "id": "9253fd97-4966-4d47-bdb8-6446b6d5d273",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -48
+      ],
+      "id": "78a1b01c-12d7-4ba0-a98b-cb97f679d1cd",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.roboflow.com/[WORK_SPACE]/[PROJECT_NAME]/[DATASET_VERSION]/[MODEL_NAME]?api_key=[API_KEY]",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        -240
+      ],
+      "id": "873c9804-5a10-44f8-a877-935de02f3029",
+      "name": "Request For Version Download Link"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.export.link }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        -240
+      ],
+      "id": "34a47906-8b81-460e-bc47-09cc8d5bad1a",
+      "name": "Downloading Version"
+    },
+    {
+      "parameters": {
+        "command": "python /home/Downloads/Yolo-Model-Training-Script/train.py --data /home/Downloads/Roboflow-Data/yolov8-obb/data.yaml --epochs 100 --batch 16 --imgsz 640 --weights yolov8n.pt --project /home/Downloads/Yolo-Model-Training-Script/runs --name roboflow_training"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -240
+      ],
+      "id": "32d27952-d70a-40cc-b240-5a003c895afe",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "command": "unzip -o /home/Downloads/Roboflow-Data/yolov8-obb.zip -d /home/Downloads/Roboflow-Data/yolov8-obb/"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -240
+      ],
+      "id": "68bafe5b-748d-43f2-9b1a-1f2a03fcb014",
+      "name": "Execute Command1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Roboflow API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roboflow API": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Request For Version Download Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request For Version Download Link": {
+      "main": [
+        [
+          {
+            "node": "Downloading Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Downloading Version": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Execute Command1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command1": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3c49066d-4d7b-4610-b049-c11003c98601",
+  "meta": {
+    "instanceId": "e3c047a598be6e033d8d18fddd328865989f26c7e6d53ae1263c413d09eb850b"
+  },
+  "id": "kEOCvTTaVLyZ70AZ",
+  "tags": []
+}
